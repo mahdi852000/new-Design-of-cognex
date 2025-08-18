@@ -17,6 +17,7 @@ public interface CognexCommand {
     record ListenerDied(ActorRef<SystemEvent.CognexEvent> listener) implements CognexCommand {}
     record Connect() implements CognexCommand {}
     record NotifyScannedCode(IResource resource, String code) implements CognexCommand {}
+    record Disconnect() implements CognexCommand {}
 
 
 

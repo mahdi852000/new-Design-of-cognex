@@ -25,15 +25,13 @@ public class ScannerUtilsTest {
         mockRef = mock(IReference.class);
     }
 
-    /**
-     * This test demonstrates how to use the `getProperty` utility method to fetch a Long value
-     * from a resource. We simulate a case where the resource contains the string "456"
-     * for the key "triggerRangeMax". The test checks if the value is successfully retrieved,
-     * properly converted to a Long, and matches the expected result (456L).
-     * <p>
-     * This is useful for understanding how type-safe property retrieval works with Optional values.
-     */
-
+/**
+    *- Verifies that ScannerUtils.getProperty correctly retrieves and converts
+    * - a resource property value to a Long when the property exists.
+    * - Mocks the resource to return "456" for the "triggerRangeMax" reference,
+    * - then asserts the Optional is present and equals 456L.
+    * - Logs and console output confirm successful retrieval and conversion.
+*/
     @Test
     void testGetProperty_ReturnsLongValue() {
         IReference expectedRef = LOGISTICS.NAMAESPACE_URI.appendLocalPart("triggerRangeMax");
@@ -56,20 +54,6 @@ public class ScannerUtilsTest {
 
     }
 
-    /**
-     * This test demonstrates how the `getProperty` utility method retrieves and parses a Boolean
-     * value from a resource. It simulates a case where the resource returns the string "true"
-     * for the key "heartbeat". Since `ScannerUtils` internally converts the key to an IReference,
-     * we mock the resource response based on that reference.
-     * <p>
-     * The test verifies that:
-     * 1. The value is successfully retrieved (i.e., the Optional is present),
-     * 2. The returned value is parsed correctly as a Boolean,
-     * 3. The parsed value matches the expected result: true.
-     * <p>
-     * This helps clarify how type-safe property extraction and automatic key conversion work
-     * in the utility method.
-     */
 
     @Test
     void testGetProperty_ReturnsBooleanValue() {
@@ -90,14 +74,11 @@ public class ScannerUtilsTest {
     }
 
     /**
-     * This test shows how the `getProperty` method behaves when the requested property
-     * is not available or explicitly set to null in the resource.
-     * <p>
-     * We simulate this by returning null for the key "triggerRangeMax". The test ensures that:
-     * 1. The method handles the null value gracefully,
-     * 2. It returns an empty Optional instead of throwing an exception.
-     * <p>
-     * This is important for ensuring robustness when dealing with optional configuration values.
+     * - Verifies that ScannerUtils.getProperty correctly retrieves and converts
+     * - a resource property value to a Boolean when the property exists.
+     * - Mocks the resource to return "true" for the "heartbeat" reference,
+     * - then asserts the Optional is present and the value is true.
+     * - Console output confirms successful parsing of the boolean value.
      */
         @Test
         void testGetProperty_ReturnsEmptyIfNull() {
@@ -111,7 +92,13 @@ public class ScannerUtilsTest {
 
             assertFalse(result.isPresent());
         }
-
+    /**
+     * - Verifies that ScannerUtils.getProperty returns an empty Optional when the property
+     * - value cannot be converted to the requested type.
+     * - Mocks the resource to return a non-numeric string ("notANumber") for a Long property.
+     * - Expects a NumberFormatException to be caught internally, with a warning log message.
+     * - Asserts that the resulting Optional is empty, confirming invalid conversion handling.
+     */
     @Test
     void testGetProperty_InvalidConversion() {
         IReference expectedRef = LOGISTICS.NAMAESPACE_URI.appendLocalPart("notANumber");

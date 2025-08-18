@@ -68,13 +68,10 @@ public class RangeObserverReliabilityTest {
 
         ActorRef<RangeObserverCommand> observer =
                 testKit.spawn(faultyBehavior, "reliableObserver");
-
         observer.tell(new RangeObserverCommand.Tick());
 
         Thread.sleep(2000);
-
         observer.tell(new RangeObserverCommand.StartObserving());
-
         scanReceiverProbe.expectMessage("started");
 
     }

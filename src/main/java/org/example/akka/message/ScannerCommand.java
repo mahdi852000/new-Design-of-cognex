@@ -41,6 +41,20 @@ public interface ScannerCommand {
 
     }
 
+    enum Mode { AUTO, MANUAL }
+    record SwitchMode(Mode mode) implements ScannerCommand {}
+    record ToggleMode() implements ScannerCommand {}
+    record QueryMode(akka.actor.typed.ActorRef<ModeStatus> replyTo) implements ScannerCommand {}
+    record ModeStatus(Mode mode) implements ScannerCommand {}
+
+
+    record RegisterObserver(ActorRef<RangeObserverCommand> ref)
+            implements ScannerCommand {}
+
+    record ManualTriggerScan() implements ScannerCommand {}
+    record ManualSetOccupation(boolean occupied) implements ScannerCommand {}
+
+
 }
 
 

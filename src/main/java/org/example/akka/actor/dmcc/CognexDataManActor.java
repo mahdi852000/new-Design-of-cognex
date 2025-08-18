@@ -50,10 +50,18 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
                     listeners.remove(msg.listener());
                     return this;
                 })
+                .onMessage(CognexCommand.Connect.class, msg -> {
+                    getContext().getLog().info("Cognex connected (noop)");
+                    return this;
+                })
+                .onMessage(CognexCommand.Disconnect.class, msg -> {
+                    getContext().getLog().info("Cognex disconnected (noop)");
+                    return this;
+                })
+
 
                 .build();
     }
-
  /*   private Behavior<CognexCommand> onStart(Start msg) {
         getContext().getLog().info("Received Start command");
         return this;

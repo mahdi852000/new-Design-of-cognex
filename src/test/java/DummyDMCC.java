@@ -18,6 +18,9 @@ class DummyDMCC extends DataManSystem {
         this.simulatedHeights = new long[]{140};
     }
 
+    @Override public boolean disconnect() { connected = false; return true;}
+
+
     public DummyDMCC(long[] simulatedHeights) {
         super(new DummyConnector());
         this.simulatedHeights = simulatedHeights;

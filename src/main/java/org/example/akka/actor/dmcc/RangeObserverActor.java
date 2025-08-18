@@ -20,24 +20,28 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
     private int cmId;
     private final long[] measurements = new long[5];
     private int pos = 0;
-    private Boolean occupation = null;
+    private Boolean occupation = Boolean.FALSE;
     private static final Object TICK_KEY = new Object();
+
+    private final Duration tickInterval;
 
 
     private RangeObserverActor (
             ActorContext<RangeObserverCommand> context,
             TimerScheduler<RangeObserverCommand> timers,
-            RangeObserverConfig config) {
+            RangeObserverConfig config,
+            Duration tickInterval) {
         super(context);
         this.timers = timers;
         this.config = config;
         this.cmId = config.cmId;
+        this.tickInterval=tickInterval !=null ? tickInterval : Duration.ofSeconds(5);
     }
 
     public static Behavior<RangeObserverCommand> create(RangeObserverConfig config) {
         return Behaviors.withTimers(timers->
                 Behaviors.setup(
-                        ctx-> new RangeObserverActor(ctx, timers,config)));
+                        ctx-> new RangeObserverActor(ctx, timers,config,Duration.ofSeconds(5))));
     }
 
     @Override
@@ -71,7 +75,7 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                         );
                 return Behaviors.withTimers(timers->
                         Behaviors.setup(ctx->
-                                new RangeObserverActor(ctx,timers,config)));
+                                new RangeObserverActor(ctx,timers,config,tickInterval)));
 
     }
 
@@ -82,7 +86,7 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
     }
 
     private Behavior<RangeObserverCommand> onStartObservingRange(RangeObserverCommand.StartObserving startObserving) {
-        timers.startTimerAtFixedRate(TICK_KEY, new RangeObserverCommand.Tick(), Duration.ofSeconds(2));
+        timers.startTimerAtFixedRate(TICK_KEY, new RangeObserverCommand.Tick(), this.tickInterval);
         getContext().getLog().info("Range Observing Started");
         return this;
     }
@@ -96,7 +100,6 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
     private Behavior<RangeObserverCommand> onTick(RangeObserverCommand.Tick tick) {
         try {
             Response r = config.dmcc.sendCommand("GET HEIGHT-SENSOR.CURRENT-MEASUREMENT", cmId++, true);
-
             if (r == null) {
                 getContext().getLog().warn("Received null Response from DMCC");
                 return this;
@@ -117,8 +120,6 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                     .orElse(0.0);
             //For debug
             getContext().getLog().info("avg={}, rangeMin={}, rangeMax={}", avg, config.rangeMin, config.rangeMax);
-
-
             getContext().getLog().info("Avg(5)={}, measurement={}", avg, measurement);
 
             if (config.rangeMin < avg && avg < config.rangeMax) {
@@ -129,22 +130,17 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                    // config.scanReceiver.tell(String.valueOf(measurement));
 
                     //For Debugging
-                    getContext().getLog().info("Trigger condition met. Sending TriggerScan...");
-
-
-
-                   // config.scannerActor.tell(new ScannerCommand.TriggerScan()); //This is my Question! is this what we want?
-
+                    getContext().getLog().info("Trigger condition met. Occupation ON (within range).");
+                   /* config.scannerActor.tell(new ScannerCommand.TriggerScan()); //This is my Question! is this what we want?
+                    getContext().getLog().info("Trigger condition met. Occupation ON (within range). TriggerScan sent.");*/
                     getContext().getLog().info("Occupation changed to ON");
                 }
             } else if (avg > config.rangeOff) {
-                if (occupation == null || occupation) {
+                if (occupation == null || Boolean.TRUE.equals(occupation)) {
                     occupation = false;
                     config.scannerActor.tell(new ScannerCommand.SetOccupation(false));
                     getContext().getLog().info("Occupation changed to OFF");
                 }
-
-
             }
             else {
                 //For debugging purpose
@@ -157,7 +153,7 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
             getContext().getLog().error("Error during range observation: {}", t.getMessage(), t);
             }
 
-        getContext().getLog().info("Starting DMCC scanner at URI={} host={} port={}", config.uri, config.host, config.port);
+        getContext().getLog().debug("Starting DMCC scanner at URI={} host={} port={}", config.uri, config.host,config.port);
         return this;
     }
 }

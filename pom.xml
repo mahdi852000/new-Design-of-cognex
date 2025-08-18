@@ -10,7 +10,6 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>Akka Java Project</name>
-
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -32,8 +31,6 @@
                 <artifactId>akka-actor-typed_2.13</artifactId>
                 <version>${akka.version}</version>
             </dependency>
-
-
             <!-- Akka Classic -->
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
@@ -74,7 +71,7 @@
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
                 <artifactId>akka-actor-testkit-typed_2.13</artifactId>
-                <version>${akka.version}</version>  <!-- یا نسخه مشابه 2.6+ یا 2.7 -->
+                <version>${akka.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -101,7 +98,6 @@
             </dependency>
 
             <!-- Enilink Komma dependencies -->
-
             <dependency>
                 <groupId>net.enilink.komma</groupId>
                 <artifactId>net.enilink.komma.core</artifactId>
@@ -116,7 +112,6 @@
 
     <build>
         <plugins>
-            <!-- ✅ کامپایلر جاوا -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
@@ -124,8 +119,6 @@
                     <release>21</release>
                 </configuration>
             </plugin>
-
-            <!-- ✅ اجرای کلاس Main -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -134,8 +127,6 @@
                     <mainClass>org.example.Main</mainClass>
                 </configuration>
             </plugin>
-
-            <!-- ✅ اجرای تست‌ها -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

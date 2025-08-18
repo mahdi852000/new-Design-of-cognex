@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -58,8 +59,13 @@ public class ScannerActorTest {
     }
 
     /**
-     * Test that verifies the initial connection status of ScannerActor is false (disconnected).
+     * - Verifies that ScannerActor reports "not connected" immediately after being spawned.
+     * - Spawns the actor with a DummyListener, sends QueryIsConnected via a TestProbe,
+     * - receives ConnectedStatus, and asserts status() is false.
+     * - Console/log output confirms the returned status is false and the test passes.
+     * - The CoordinatedShutdown info log after the assertion is expected during ActorSystem teardown.
      */
+
     @Test
     public void testQueryIsConnectedShouldReturnFalseInitially() {
         scannerActor = spawnScannerActor(new DummyListener());
@@ -71,10 +77,13 @@ public class ScannerActorTest {
     }
 
     /**
-     * Tests the occupation status of ScannerActor.
-     * - Sets occupation to true and verifies.
-     * - Sets it back to false and verifies again.
-     * Useful for simulating sensor occupation behavior.
+     * - Verifies that ScannerActor correctly updates and reports its occupation state.
+     * - Sends SetOccupation(true) and, using a TestProbe with awaitAssert, queries state
+     *   until OccupationStatus.occupied() is true.
+     * - Then sends SetOccupation(false) and queries again until occupied() is false.
+     * - Uses awaitAssert to handle asynchronous state propagation in the actor system.
+     * - Test logs show QueryOccupation responses toggling from true to false; CoordinatedShutdown
+     *   info after completion is expected during ActorSystem teardown.
      */
     @Test
     public void testSetAndQueryOccupation() {
@@ -96,10 +105,13 @@ public class ScannerActorTest {
         });
     }
     /**
-     * Tests ScannerActor's behavior upon receiving a Connect command.
-     * - Uses a mock IResource to simulate reading the URI.
-     * - Expects a CognexCommand.Connect message to be sent.
-     * - Then queries internal connection status and expects it to be true.
+     * - Verifies that ScannerActor transitions to "connected" after receiving Connect.
+     * - Mocks URI/IReference/IResource so the actor can resolve its endpoint details.
+     * - Spawns a fake Cognex actor and asserts a CognexCommand.Connect is emitted,
+     *   indicating an attempted hardware connection.
+     * - Uses a TestProbe with awaitAssert to query connection status until true.
+     * - Logs confirm the flow: onConnect() called → Attempting to connect… → Connected successfully.
+     * - The CoordinatedShutdown info log after success is expected during ActorSystem teardown.
      */
     @Test
     public void testOnConnectShouldUpdateConnectionStatus() {
@@ -148,13 +160,51 @@ public class ScannerActorTest {
         });
     }
     /**
-     * Tests the disconnection flow:
-     * - Simulates OnConnect, verifies status is true.
-     * - Then simulates OnDisconnect, expects status to become false.
-     * Ensures ScannerActor correctly tracks and reports connection state.
+     * - Verifies that ScannerActor flips its connection status on OnConnect/OnDisconnect.
+     * - Spawns the actor, sends OnConnect, then uses a TestProbe + awaitAssert to
+     *   query until ConnectedStatus.status() becomes true.
+     * - Sends OnDisconnect and again queries until status() becomes false.
+     * - awaitAssert handles asynchronous state propagation in the actor system.
+     * - Logs confirm the flow: "DMCC is connected" → "External DMCC injected" →
+     *   "Handling OnDisconnect" → "Disconnected from DMCC" → "Scheduled reconnect attempt".
+     * - The CoordinatedShutdown info log is expected during ActorSystem teardown.
      */
     @Test
-    public void testOnDisconnectShouldUpdateConnectionStatus() {
+    public void testOnDisconnectShouldUpdateConnectionStatus() throws IOException {
+       /* DummyDMCC base = new DummyDMCC();
+        DataManSystem dmcc = org.mockito.Mockito.spy(base);
+        org.mockito.Mockito.doCallRealMethod()
+                .when(dmcc).sendCommand(org.mockito.ArgumentMatchers.anyString(),
+                        org.mockito.ArgumentMatchers.anyInt(),
+                        org.mockito.ArgumentMatchers.anyBoolean());
+
+        org.mockito.Mockito.when(dmcc.connected())
+                .thenReturn(false, true, false);
+        var cognexProbe = testKit.createTestProbe(org.example.akka.message.CognexCommand.class);
+        var sink = testKit.createTestProbe(String.class);
+        var cfg = new org.example.akka.config.ScannerActorConfig(
+                1, dmcc, new DummyListener(), new DummyResource(),
+                "localhost", 5000,
+                cognexProbe.getRef(),
+                true,
+                sink.getRef(),
+                false
+        );
+        ActorRef<ScannerCommand> scannerActor = testKit.spawn(ScannerActor.create(cfg));
+        TestProbe<ScannerCommand.ConnectedStatus> probe = testKit.createTestProbe();
+        scannerActor.tell(new ScannerCommand.OnConnect());
+        probe.awaitAssert(Duration.ofSeconds(2), () -> {
+            scannerActor.tell(new ScannerCommand.QueryIsConnected(probe.getRef()));
+            assertTrue(probe.receiveMessage().status());
+            return null;
+        });
+        scannerActor.tell(new ScannerCommand.OnDisconnect());
+        probe.awaitAssert(Duration.ofSeconds(2), () -> {
+            scannerActor.tell(new ScannerCommand.QueryIsConnected(probe.getRef()));
+            assertFalse(probe.receiveMessage().status());
+            return null;
+        });
+*/
         scannerActor = spawnScannerActor(new DummyListener());
         scannerActor.tell(new ScannerCommand.OnConnect());
 
@@ -171,37 +221,44 @@ public class ScannerActorTest {
             scannerActor.tell(new ScannerCommand.QueryIsConnected(probe.getRef()));
             assertFalse(probe.receiveMessage().status());
             return null;
-        });
-    }
+        });    }
     /**
-     * Full integration test between RangeObserverActor and ScannerActor (via a TestProbe).
-     * - Simulates a dynamic DMCC that returns varying height values.
-     * - Observer monitors range, then sends appropriate SetOccupation and TriggerScan commands to ScannerActor.
-     * - Verifies both commands are received correctly.
+     * - Verifies end-to-end integration between RangeObserverActor and ScannerActor.
+     * - Spawns ScannerActor with a FakeDataManSystem that emits "SCAN_CODE_FROM_ACTOR" to the sink.
+     * - Marks the scanner as connected (IsConnected(true)) so scans are permitted.
+     * - Spawns RangeObserverActor with a fake sensor reading of 50.0 and starts observing.
+     * - Sends Tick; the observer computes avg=50 within [10,100], sets occupation ON, and issues TriggerScan.
+     * - Asserts the sink receives the expected payload "SCAN_CODE_FROM_ACTOR" within 3 seconds.
+     * - Logs confirm the sequence: "Connection is Ok" → observing started → avg/range details
+     *   → trigger condition met → TriggerScan sent → "Scanner triggered to scan."
+     * - CoordinatedShutdown info after completion is expected during ActorSystem teardown.
      */
     @Test
     public void testRangeObserverToScannerActorIntegration() {
-        long[] fakeHeights = {120L, 130L, 140L};
-        DummyDMCC dynamicDMCC = new DummyDMCC(fakeHeights);
-        TestProbe<ScannerCommand> scannerProbe = testKit.createTestProbe();
-        TestProbe<String> scanReceiverProbe = testKit.createTestProbe();
+        TestProbe<String> sink = testKit.createTestProbe();
 
-        RangeObserverConfig rangeConfig = new RangeObserverConfig(
-                dynamicDMCC, 1, 100L, 160L, 180L,
-                scannerProbe.getRef(), "fakeUri", "localhost", 5000, scanReceiverProbe.getRef()
+        ActorRef<ScannerCommand> scanner = testKit.spawn(
+                ScannerActor.create(new ScannerActorConfig(
+                        1,
+                        new FakeDataManSystem(50, sink.getRef()),
+                        new DummyListener(),
+                        new DummyResource(),
+                        "localhost", 5000,
+                        testKit.createTestProbe(CognexCommand.class).getRef(),
+                        true,
+                        sink.getRef(),
+                        false
+                ))
+        );
+        scanner.tell(new ScannerCommand.IsConnected(true));
+        scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.AUTO));
+
+        ActorRef<RangeObserverCommand> obs = testKit.spawn(
+                RangeObserverActor.createWithFakeSensor(50.0, scanner, sink.getRef(), Duration.ofMillis(100))
         );
 
-        ActorRef<RangeObserverCommand> observer = testKit.spawn(
-                RangeObserverActor.create(rangeConfig),
-                "RangeObserver-" + UUID.randomUUID()
-        );
-        observer.tell(new RangeObserverCommand.StartObserving());
-        ScannerCommand.SetOccupation occ = scannerProbe.expectMessageClass(
-                ScannerCommand.SetOccupation.class, Duration.ofSeconds(5));
-        assertTrue(occ.occupied());
-
-        ScannerCommand.TriggerScan triggerScan = scannerProbe.expectMessageClass(
-                ScannerCommand.TriggerScan.class, Duration.ofSeconds(10));
-        assertNotNull(triggerScan);
-    }
+        obs.tell(new RangeObserverCommand.StartObserving());
+        obs.tell(new RangeObserverCommand.Tick());
+        assertEquals("SCAN_CODE_FROM_ACTOR", sink.receiveMessage(Duration.ofSeconds(3)));
+}
 }
