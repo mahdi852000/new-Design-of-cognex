@@ -51,11 +51,11 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
                     return this;
                 })
                 .onMessage(CognexCommand.Connect.class, msg -> {
-                    getContext().getLog().info("Cognex connected (noop)");
+                    getContext().getLog().info("Cognex connected (no-op)");
                     return this;
                 })
                 .onMessage(CognexCommand.Disconnect.class, msg -> {
-                    getContext().getLog().info("Cognex disconnected (noop)");
+                    getContext().getLog().info("Cognex disconnected (no-op)");
                     return this;
                 })
 

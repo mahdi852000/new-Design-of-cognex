@@ -268,7 +268,35 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
         getContext().getLog().debug("📥 [ScannerActor] Received QueryOccupation, responding with {}", occupation);
         return this;
     }
+
     private Behavior<ScannerCommand> onDisconnect(ScannerCommand.Disconnect msg) {
+        if (rangeObserverActor != null && isRangeObserving) {
+            rangeObserverActor.tell(new RangeObserverCommand.StopObserving());
+            isRangeObserving = false;
+            observingSource = ObservingSource.NONE;
+            getContext().getLog().info("RangeObserverActor stopped due to disconnect");
+        }
+        triggeredWhileOccupied = false;
+        occupation = false;
+        if (listener != null) {
+            try { listener.onOccupationChanged(false); }
+            catch (Throwable ignore) {}
+        }
+        if (dmcc != null) {
+            try { if (listener != null) dmcc.removeListener(listener); }
+            catch (Throwable t) { getContext().getLog().warn("Failed to remove listener: {}", t.toString()); }
+            try { if (dmcc.connected()) dmcc.disconnect(); }
+            catch (Throwable t) { getContext().getLog().warn("Failed to disconnect DMCC: {}", t.toString()); }
+        }
+        connected = false;
+        connectionState = ConnectionState.DISCONNECTED;
+        retryCount = 0;
+        cognexActor.tell(new CognexCommand.Disconnect());
+        getContext().getLog().info("DMCC disconnected; state -> DISCONNECTED");
+        return this;
+    }
+
+    /*   private Behavior<ScannerCommand> onDisconnect(ScannerCommand.Disconnect msg) {
 
         if (rangeObserverActor != null && isRangeObserving) {
             rangeObserverActor.tell(new RangeObserverCommand.StopObserving());
@@ -289,12 +317,12 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
             }
         }
         connected = false;
-        connectionState = ConnectionState.DISCONNECTED; // ← مهم
+        connectionState = ConnectionState.DISCONNECTED;
         retryCount = 0;
         cognexActor.tell(new CognexCommand.Disconnect());
         getContext().getLog().info("DMCC disconnected; state -> DISCONNECTED");
         return this;
-    }
+    }*/
     private Behavior <ScannerCommand> onGetOccupation (ScannerCommand.GetOccupation msg) {
         getContext().getLog().info("Check being Occupied");
         boolean isOccupied =  occupation !=null && occupation;

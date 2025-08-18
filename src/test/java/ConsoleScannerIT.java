@@ -2,6 +2,9 @@ import akka.actor.typed.*;
 import akka.actor.typed.javadsl.*;
 import net.enilink.komma.core.IReference;
 import org.example.akka.actor.dmcc.CognexDataManActor;
+import org.example.akka.actor.dmcc.RangeObserverActor;
+import org.example.akka.message.RangeObserverCommand;
+
 import org.example.akka.actor.dmcc.ScannerActor;
 import org.example.akka.config.ScannerActorConfig;
 import org.example.akka.event.SystemEvent;
@@ -107,6 +110,16 @@ public class ConsoleScannerIT {
                     false               // manual trigger by default
             );
             ActorRef<ScannerCommand> scanner = ctx.spawn(ScannerActor.create(config), "scanner");
+            ActorRef<RangeObserverCommand> observer = ctx.spawn(
+                    RangeObserverActor.createWithFakeSensor(
+                            140.0,
+                            scanner,
+                            scanSink,
+                            java.time.Duration.ofMillis(5000)
+                    ),
+                    "observer"
+            );
+            scanner.tell(new ScannerCommand.RegisterObserver(observer));
 
             // === REPL (stdin) on a blocking thread ===
             new Thread(() -> repl(scanner, cognexActor, scanSink,system), "console-repl").start();
@@ -116,7 +129,6 @@ public class ConsoleScannerIT {
 
         ActorSystem<Void> system = ActorSystem.create(root, "console-it");
     }
-
     // ===== Console REPL =====
     private static void repl(ActorRef<ScannerCommand> scanner,
                              ActorRef<CognexCommand> cognex,
@@ -133,18 +145,27 @@ public class ConsoleScannerIT {
                 switch (cmd) {
                     case "help" -> printHelp();
                     case "exit", "quit" -> { System.out.println("bye"); System.exit(0); }
-
                     // Scanner control
                     case "connect" -> scanner.tell(new ScannerCommand.Connect());
                     case "onconnect" -> scanner.tell(new ScannerCommand.OnConnect());
                     case "disconnect" -> scanner.tell(new ScannerCommand.Disconnect());
                     case "start" -> scanner.tell(new ScannerCommand.Start());
                     case "stop" -> scanner.tell(new ScannerCommand.Stop());
-                    case "trigger" -> scanner.tell(new ScannerCommand.TriggerScan());
+                  //  case "trigger" -> scanner.tell(new ScannerCommand.TriggerScan());
                     case "sendtrigger" -> scanner.tell(new ScannerCommand.SendTrigger());
+                    case "trigger" -> {
+                        scanner.tell(new ScannerCommand.ManualTriggerScan());
+                    }
+                    // case "setocc" -> {
+                    //    boolean occ = arg.equalsIgnoreCase("true") || arg.equalsIgnoreCase("on");
+                      //  scanner.tell(new ScannerCommand.SetOccupation(occ));
+                   // }
                     case "setocc" -> {
-                        boolean occ = arg.equalsIgnoreCase("true") || arg.equalsIgnoreCase("on");
-                        scanner.tell(new ScannerCommand.SetOccupation(occ));
+                        boolean occ = arg.equalsIgnoreCase("true")
+                                || arg.equalsIgnoreCase("on");
+
+                        scanner.tell(new ScannerCommand.ManualSetOccupation(occ));
+                        System.out.println("requested: set occupation = " + occ + " (manual mode only)");
                     }
                     case "qocc" -> {
                         // reply comes as a message; we create an inline temp actor to print it
@@ -170,24 +191,31 @@ public class ConsoleScannerIT {
                         var code = arg.isBlank() ? "TEST-CODE" : arg;
                         cognex.tell(new CognexCommand.NotifyScannedCode(new DummyResource(), code));
                     }
-
                     // Utilities for manual checks
                     case "pause" -> {
                         long parsed = 1000L;
                         try { parsed = Long.parseLong(arg); } catch (Exception ignored) {}
                         final long delayMs = parsed;
-
                         scanner.tell(new ScannerCommand.Stop());
-
                         system.scheduler().scheduleOnce(
                                 java.time.Duration.ofMillis(delayMs),
                                 () -> scanner.tell(new ScannerCommand.Start()),
                                 system.executionContext()
                         );
-
                         System.out.println("paused observing for ~" + delayMs + " ms");
                     }
-
+                    case "mode" -> {
+                        String m = arg.toLowerCase(Locale.ROOT);
+                        if ("manual".equals(m)) {
+                            scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.MANUAL));
+                            System.out.println("OK: mode=MANUAL");
+                        } else if ("auto".equals(m)) {
+                            scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.AUTO));
+                            System.out.println("OK: mode=AUTO");
+                        } else {
+                            System.out.println("usage: mode manual | mode auto");
+                        }
+                    }
                     default -> System.out.println("unknown command. type 'help'");
                 }
             }
@@ -203,13 +231,15 @@ public class ConsoleScannerIT {
                 "  connect / onconnect        - connect DMCC (explicit/shortcut)\n" +
                 "  disconnect                 - disconnect DMCC\n" +
                 "  start / stop               - start/stop scanner workflow\n" +
-                "  trigger / sendtrigger      - trigger a scan\n" +
-                "  setocc on|off              - set occupation true/false\n" +
+                "  mode manual | mode auto    - switch mode\n" +
+                "  trigger                    - trigger a scan (manual mode only)\n" +
+                "  sendtrigger                - force low-level trigger (ignores mode)\n" +
+                "  setocc on|off              - set occupation (manual mode only)\n" +
                 "  qocc                       - query occupation\n" +
                 "  qconn                      - query connection\n" +
                 "  cognex.register            - add a temp listener to print Cognex events\n" +
                 "  cognex.notify <CODE>       - simulate NotifyScannedCode to Cognex actor\n" +
-                "  sleep <ms>                 - sleep to allow timers/messages to flow\n");
+                "  pause <ms>                 - sleep to allow timers/messages to flow\n");
     }
 
     // ===== Small helper behaviors =====

@@ -119,8 +119,8 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                     .average()
                     .orElse(0.0);
             //For debug
-            getContext().getLog().info("avg={}, rangeMin={}, rangeMax={}", avg, config.rangeMin, config.rangeMax);
-            getContext().getLog().info("Avg(5)={}, measurement={}", avg, measurement);
+            getContext().getLog().debug("avg={}, rangeMin={}, rangeMax={}", avg, config.rangeMin, config.rangeMax);
+            getContext().getLog().debug("Avg(5)={}, measurement={}", avg, measurement);
 
             if (config.rangeMin < avg && avg < config.rangeMax) {
                 if (occupation == null || !occupation) {
@@ -147,7 +147,7 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                 getContext().getLog().info("Trigger condition NOT met. No scan triggered.");
             }
                 //For debugging purpose
-            getContext().getLog().info("Tick received");
+            getContext().getLog().debug("Tick received");
 
         } catch (Throwable t) {
             getContext().getLog().error("Error during range observation: {}", t.getMessage(), t);
