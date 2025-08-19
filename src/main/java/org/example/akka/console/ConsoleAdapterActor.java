@@ -43,6 +43,9 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
             case "mode auto" -> {
                 scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.AUTO));
                 out.tell("OK: mode=AUTO");
+
+
+
             }
             case "mode manual" -> {
                 scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.MANUAL));

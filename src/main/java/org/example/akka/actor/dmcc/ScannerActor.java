@@ -167,6 +167,9 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
             observingSource = ObservingSource.EXTERNAL;
             isRangeObserving = true;
             getContext().getLog().info("RangeObserver (observerRef) observing started");
+            getContext().getLog().info("startObserver(): observerRef={} rangeActor={} isRangeObserving={}",
+                    observerRef, rangeObserverActor, isRangeObserving);
+
         } else if (rangeObserverActor != null) {
             rangeObserverActor.tell(new RangeObserverCommand.StartObserving());
             observingSource = ObservingSource.INTERNAL;
@@ -196,7 +199,9 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
         triggeredWhileOccupied = false;
 
         if (this.mode == ScannerCommand.Mode.AUTO) {
+            getContext().getLog().info("onSwitchMode: calling startObserver (isRangeObserving={})", isRangeObserving);
             if (!isRangeObserving) startObserver();
+
         } else {
             stopObserver();
         }

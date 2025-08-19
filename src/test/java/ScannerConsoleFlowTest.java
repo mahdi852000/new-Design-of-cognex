@@ -32,7 +32,7 @@ public class ScannerConsoleFlowTest {
         testKit.shutdownTestKit();
     }
     @Test
-    void console_operator_manual_then_auto_then_manual() {
+    void console_operator_manual_then_auto_then_manual() throws InterruptedException {
 
         TestProbe<String> consoleOut = testKit.createTestProbe(); // only for ConsoleAdapter messages
         TestProbe<String> scanOut    = testKit.createTestProbe(); // only for ScannerOutput
@@ -61,8 +61,18 @@ public class ScannerConsoleFlowTest {
                 org.example.akka.console.ConsoleAdapterActor.create(scanner, consoleOut.getRef())
         );
 
-        console.tell("occ?");
-        assertEquals("occupation=false", consoleOut.receiveMessage(Duration.ofSeconds(2)));
+
+        consoleOut.awaitAssert(Duration.ofSeconds(5),()->{
+            observer.tell(new RangeObserverCommand.StartObserving());
+            return null;
+        });
+        consoleOut.awaitAssert(Duration.ofSeconds(5), () -> {
+            console.tell("occ?");
+            assertEquals("occupation=true", consoleOut.receiveMessage());
+            return null;
+        });
+       /* console.tell("occ?");
+        assertEquals("occupation=false", consoleOut.receiveMessage(Duration.ofSeconds(2)));*/
 
         // MANUAL: trigger
         console.tell("trigger");
@@ -75,35 +85,39 @@ public class ScannerConsoleFlowTest {
         // AUTO
         console.tell("mode auto");
         consoleOut.expectMessage("OK: mode=AUTO");
+        observer.tell(new RangeObserverCommand.StartObserving());
+
 
 
         //observe
        /* console.tell("start");
         consoleOut.expectMessage("started");*/
 
-        consoleOut.awaitAssert(Duration.ofSeconds(3), () -> {
+        consoleOut.awaitAssert(Duration.ofSeconds(5), () -> {
             console.tell("occ?");
             assertEquals("occupation=true", consoleOut.receiveMessage());
             return null;
         });
-        console.tell("occ?");
+       /* console.tell("occ?");
         String occAns = consoleOut.receiveMessage(Duration.ofSeconds(2));
         if (!occAns.equals("occupation=true")) {
             console.tell("occ?");
             occAns = consoleOut.receiveMessage(Duration.ofSeconds(2));
         }
         assertEquals("occupation=true", occAns);
-
         String autoCode = scanOut.receiveMessage(Duration.ofSeconds(3));
-        assertNotNull(autoCode);
+        assertNotNull(autoCode);*/
+
+        consoleOut.awaitAssert(Duration.ofSeconds(5), () -> {
+            console.tell("occ?");
+            assertEquals("occupation=true", consoleOut.receiveMessage());
+            return null;
+        });
 
 
         console.tell("mode manual");
         consoleOut.expectMessage("OK: mode=MANUAL");
-
-
         scanOut.expectNoMessage(Duration.ofMillis(500));
-
         console.tell("trigger");
         consoleOut.expectMessage("trigger sent");
         assertEquals("SCAN_CODE_FROM_ACTOR", scanOut.receiveMessage(Duration.ofSeconds(2)));

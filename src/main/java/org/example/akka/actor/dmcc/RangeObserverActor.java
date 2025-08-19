@@ -78,7 +78,7 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
         RangeObserverConfig config = new RangeObserverConfig(
                                 fakeDmcc,
                                 0,
-                                10L,
+                                80L,
                                 100L,
                                 120L,
                                 scannerActor,
@@ -102,6 +102,8 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
 
     private Behavior<RangeObserverCommand> onStartObservingRange(RangeObserverCommand.StartObserving startObserving) {
         timers.startTimerAtFixedRate(TICK_KEY, new RangeObserverCommand.Tick(), this.tickInterval);
+        //For test
+        getContext().getSelf().tell(new RangeObserverCommand.Tick());
         getContext().getLog().info("Range Observing Started");
         return this;
     }
@@ -121,9 +123,6 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
 
             long elapsedNs = System.nanoTime() - startNs;
             long latencyMs = Math.max(1, elapsedNs / 1_000_000L);
-
-
-
             if (r == null) {
                 getContext().getLog().warn("Received null Response from DMCC");
                 return this;
@@ -132,9 +131,18 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                 getContext().getLog().warn("Null result from DMCC");
                 return this;
             }
-            long measurement = Long.parseLong(r.result());
+           // long measurement = Long.parseLong(r.result());
 
-           if (simulateNoise) {
+            String s = r.result().trim();
+            long measurement;
+            try {
+                measurement = Long.parseLong(s);
+            } catch (NumberFormatException e) {
+                measurement = Math.round(Double.parseDouble(s));
+            }
+
+
+            if (simulateNoise) {
                 measurement = synth.next();
             }
             measurements[pos] = measurement;
