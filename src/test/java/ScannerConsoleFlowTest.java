@@ -53,7 +53,7 @@ public class ScannerConsoleFlowTest {
         ActorRef<ScannerCommand> scanner = testKit.spawn(ScannerActor.create(cfg));
 
         ActorRef<RangeObserverCommand> observer = testKit.spawn(
-                RangeObserverActor.createWithFakeSensor(50.0, scanner, scanOut.getRef(), Duration.ofMillis(500)));
+                RangeObserverActor.createWithFakeSensor(50.0, scanner, scanOut.getRef(), Duration.ofMillis(500),null));
         scanner.tell(new ScannerCommand.RegisterObserver(observer));
 
 

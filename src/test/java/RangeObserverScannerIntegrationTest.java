@@ -49,8 +49,9 @@ public class RangeObserverScannerIntegrationTest {
                         simulatedDistance,
                         scannerProbe.getRef(),
                         scanReceiverProbe.getRef(),
-                        tickInterval
-                )
+                        tickInterval,
+                        null
+                        )
         );
 
         observer.tell(new RangeObserverCommand.StartObserving());
@@ -94,8 +95,8 @@ public class RangeObserverScannerIntegrationTest {
                         50.0,
                         scanner,
                         sink.getRef(),
-                        Duration.ofMillis(100)
-                ),
+                        Duration.ofMillis(100),
+                        null),
                 "observer-it"
         );
         obs.tell(new RangeObserverCommand.StartObserving());

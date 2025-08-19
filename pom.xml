@@ -108,7 +108,14 @@
                 <artifactId>net.enilink.composition</artifactId>
                 <version>1.7.0</version>
             </dependency>
-    </dependencies>
+            <!--Metrics-->
+            <dependency>
+                <groupId>org.knowm.xchart</groupId>
+                <artifactId>xchart</artifactId>
+                <version>3.8.6</version>
+            </dependency>
+
+        </dependencies>
 
     <build>
         <plugins>

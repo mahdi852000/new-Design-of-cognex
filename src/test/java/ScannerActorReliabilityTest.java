@@ -4,14 +4,12 @@ import akka.actor.typed.Behavior;
 import net.enilink.komma.core.IReference;
 import org.example.akka.actor.dmcc.RangeObserverActor;
 import org.example.akka.actor.dmcc.ScannerActor;
-import org.example.akka.config.RangeObserverConfig;
 import org.example.akka.config.ScannerActorConfig;
 import org.example.akka.extra.*;
 import org.example.akka.message.*;
 import org.junit.jupiter.api.*;
 import static org.mockito.Mockito.*;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
@@ -134,8 +132,8 @@ public class ScannerActorReliabilityTest {
                 true,                                       // simulateConnected
                 dummyReceiver.getRef(),                                  // This probe will get scan result
                 false,                                                   // manual trigger
-                rangeObserverProbe.getRef()                              // Optional observer probe
-        );
+                rangeObserverProbe.getRef(),                              // Optional observer probe
+                null);
 
         // Spawn the actor
         ActorRef<ScannerCommand> scannerActor = testKit.spawn(
@@ -336,6 +334,6 @@ public class ScannerActorReliabilityTest {
             ActorRef<String> scanReceiver,
             Duration tickInterval
     ) { return RangeObserverActor.createWithFakeSensor(
-            fixedDistance,scannerActor,scanReceiver,tickInterval);
+            fixedDistance,scannerActor,scanReceiver,tickInterval, null);
     }
 }

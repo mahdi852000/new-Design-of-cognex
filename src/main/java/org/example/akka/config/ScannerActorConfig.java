@@ -4,6 +4,7 @@ import akka.actor.typed.ActorRef;
 
 import org.example.akka.extra.*;
 import org.example.akka.message.*;
+import org.example.akka.metrics.Metrics;
 
 
 public class ScannerActorConfig {
@@ -18,6 +19,7 @@ public class ScannerActorConfig {
     public final ActorRef<String> scanReceiver;
     public final boolean useCheckSum;
     public final ActorRef<RangeObserverCommand> rangeObserverActor;
+    public final ActorRef<Metrics.Event> metricsRef;
 
 
     public ScannerActorConfig(
@@ -31,7 +33,8 @@ public class ScannerActorConfig {
             boolean isExternalDmcc,
             ActorRef<String> scanReceiver,
             boolean useCheckSum,
-            ActorRef<RangeObserverCommand> rangeObserverActor
+            ActorRef<RangeObserverCommand> rangeObserverActor, ActorRef<Metrics.Event> metricsRef
+
     ) {
         this.cmId = cmId;
         this.dmcc = dmcc;
@@ -43,7 +46,8 @@ public class ScannerActorConfig {
         this.isExternalDmcc = isExternalDmcc;
         this.scanReceiver = scanReceiver;
         this.useCheckSum = useCheckSum;
-        this.rangeObserverActor = rangeObserverActor; // for test
+        this.rangeObserverActor = rangeObserverActor;// for test
+        this.metricsRef = metricsRef;
     }
 
     public ScannerActorConfig(
@@ -58,7 +62,7 @@ public class ScannerActorConfig {
             ActorRef<String> scanReceiver,
             boolean useCheckSum) {
             this(cmId, dmcc, listener, delegate, host, port, cognexActor,
-                isExternalDmcc, scanReceiver, useCheckSum, null); // default value
+                isExternalDmcc, scanReceiver, useCheckSum, null, null); // default value
     }
 
 

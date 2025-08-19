@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.enilink.komma.core.*;
 import org.example.akka.actor.dmcc.RangeObserverActor;
 import org.example.akka.actor.dmcc.ScannerActor;
-import org.example.akka.config.RangeObserverConfig;
 import org.example.akka.config.ScannerActorConfig;
 import org.example.akka.extra.*;
 import org.example.akka.message.*;
@@ -254,7 +253,7 @@ public class ScannerActorTest {
         scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.AUTO));
 
         ActorRef<RangeObserverCommand> obs = testKit.spawn(
-                RangeObserverActor.createWithFakeSensor(50.0, scanner, sink.getRef(), Duration.ofMillis(100))
+                RangeObserverActor.createWithFakeSensor(50.0, scanner, sink.getRef(), Duration.ofMillis(100), null)
         );
 
         obs.tell(new RangeObserverCommand.StartObserving());

@@ -13,6 +13,11 @@ import org.example.akka.message.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import org.example.akka.metrics.Metrics;
+import java.nio.file.Paths;
+import java.time.Duration;
+
+
 import java.util.Locale;
 
 import net.enilink.komma.core.URI;
@@ -32,6 +37,10 @@ public class ConsoleScannerIT {
 
     public static void main(String[] args) throws Exception {
         Behavior<Void> root = Behaviors.setup(ctx -> {
+            var metrics = ctx.spawn(
+                    Metrics.create(Paths.get("metrics.csv"), Duration.ofSeconds(1)),
+                    "metrics"
+            );
             ActorSystem<?> system=ctx.getSystem();
             // === Print sinks ===
             ActorRef<String> scanSink = ctx.spawn(printString("[scan] "), "scan-sink");
@@ -46,19 +55,19 @@ public class ConsoleScannerIT {
             // Sends any scan result string to scanSink; you can still trigger via ScannerActor.TriggerScan
             DataManSystem dmcc = new DataManSystem(new DummyConnector()) {
                 private boolean ok = false;
-                private long meas = 140;
+                private long meas = 95;
                 @Override public boolean connect() { ok=true; return true;}
                 @Override public boolean connected() { return ok; }
                 @Override public boolean disconnect() { ok = false; return false; }
                 @Override public Response sendCommand(String cmd, Integer id, boolean log) {
                     if (cmd.startsWith("GET HEIGHT-SENSOR.CURRENT-MEASUREMENT")) {
-                        // مقدار عددی بده
+
                         return new Response(String.valueOf(meas), false, id);
                     }
                     if (cmd.equals("UPTIME")) {
                         return new Response("12345", false, id);
                     }
-                    return new Response("0", false, id); // پیش‌فرض امنِ عددی
+                    return new Response("0", false, id);
                 }
 
                 @Override public Response sendCommand(String cmd) {
@@ -85,9 +94,9 @@ public class ConsoleScannerIT {
             IReference refOff = LOGISTICS.NAMAESPACE_URI.appendLocalPart("triggerRangeOff");
             IReference refHB  = LOGISTICS.NAMAESPACE_URI.appendLocalPart("heartbeat");
 
-            when(delegate.getSingle(refMin)).thenReturn("100");
-            when(delegate.getSingle(refMax)).thenReturn("160");
-            when(delegate.getSingle(refOff)).thenReturn("180");
+            when(delegate.getSingle(refMin)).thenReturn("90");
+            when(delegate.getSingle(refMax)).thenReturn("100");
+            when(delegate.getSingle(refOff)).thenReturn("110");
             when(delegate.getSingle(refHB)).thenReturn("true");
 
             URI fakeUri = URIs.createURI("urn:scanner:fake1");
@@ -112,10 +121,11 @@ public class ConsoleScannerIT {
             ActorRef<ScannerCommand> scanner = ctx.spawn(ScannerActor.create(config), "scanner");
             ActorRef<RangeObserverCommand> observer = ctx.spawn(
                     RangeObserverActor.createWithFakeSensor(
-                            140.0,
+                            90.0,
                             scanner,
                             scanSink,
-                            java.time.Duration.ofMillis(5000)
+                            java.time.Duration.ofMillis(5000),
+                            metrics
                     ),
                     "observer"
             );
@@ -123,7 +133,6 @@ public class ConsoleScannerIT {
 
             // === REPL (stdin) on a blocking thread ===
             new Thread(() -> repl(scanner, cognexActor, scanSink,system), "console-repl").start();
-
             return Behaviors.empty();
         });
 
