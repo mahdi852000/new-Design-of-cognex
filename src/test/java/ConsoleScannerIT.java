@@ -41,6 +41,8 @@ public class ConsoleScannerIT {
                     Metrics.create(Paths.get("metrics.csv"), Duration.ofSeconds(1)),
                     "metrics"
             );
+            org.example.akka.metrics.MetricsServer.start(9402);
+
             ActorSystem<?> system=ctx.getSystem();
             // === Print sinks ===
             ActorRef<String> scanSink = ctx.spawn(printString("[scan] "), "scan-sink");
@@ -162,9 +164,9 @@ public class ConsoleScannerIT {
                     case "stop" -> scanner.tell(new ScannerCommand.Stop());
                   //  case "trigger" -> scanner.tell(new ScannerCommand.TriggerScan());
                     case "sendtrigger" -> scanner.tell(new ScannerCommand.SendTrigger());
-                    case "trigger" -> {
-                        scanner.tell(new ScannerCommand.ManualTriggerScan());
-                    }
+                //    case "trigger" -> {
+                     //   scanner.tell(new ScannerCommand.ManualTriggerScan());
+                  //  }
                     // case "setocc" -> {
                     //    boolean occ = arg.equalsIgnoreCase("true") || arg.equalsIgnoreCase("on");
                       //  scanner.tell(new ScannerCommand.SetOccupation(occ));
@@ -241,7 +243,7 @@ public class ConsoleScannerIT {
                 "  disconnect                 - disconnect DMCC\n" +
                 "  start / stop               - start/stop scanner workflow\n" +
                 "  mode manual | mode auto    - switch mode\n" +
-                "  trigger                    - trigger a scan (manual mode only)\n" +
+             //   "  trigger                    - trigger a scan (manual mode only)\n" +
                 "  sendtrigger                - force low-level trigger (ignores mode)\n" +
                 "  setocc on|off              - set occupation (manual mode only)\n" +
                 "  qocc                       - query occupation\n" +

@@ -13,6 +13,9 @@ import org.example.akka.event.SystemEvent;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.example.akka.metrics.ActorMetricsInterceptor;
+
+
 
 public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
 
@@ -22,9 +25,15 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
         super(context);
     }
 
+  //  public static Behavior<CognexCommand> create() {
+   //     return Behaviors.setup(CognexDataManActor::new);
+    //}
+
     public static Behavior<CognexCommand> create() {
-        return Behaviors.setup(CognexDataManActor::new);
+        Behavior<CognexCommand> core = Behaviors.setup(CognexDataManActor::new);
+        return ActorMetricsInterceptor.wrap("CognexDataManActor", CognexCommand.class, core);
     }
+
 
     @Override
     public Receive<CognexCommand> createReceive() {
@@ -108,6 +117,4 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
         }
         return this;
     }
-
-
 }

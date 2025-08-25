@@ -4,6 +4,8 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.PostStop;
 import akka.actor.typed.javadsl.*;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.example.akka.config.RangeObserverConfig;
 
 import org.example.akka.extra.FakeDataManSystem;
@@ -11,6 +13,12 @@ import org.example.akka.message.RangeObserverCommand;
 import org.example.akka.message.Response;
 import org.example.akka.message.ScannerCommand;
 import org.example.akka.metrics.Metrics;
+
+import org.example.akka.metrics.ActorMetricsInterceptor;
+import org.example.akka.metrics.MetricsServer;
+
+import io.micrometer.core.instrument.*;
+
 
 import java.time.Duration;
 
@@ -26,33 +34,78 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
     private static final Object TICK_KEY = new Object();
     private final Duration tickInterval;
 
+    // ===== Micrometer fields =====
+    private final MeterRegistry reg = MetricsServer.registry();
+    private final DistributionSummary dmccLatency;
+    private final Counter occupationTrue;
+    private final Counter occupationFalse;
+    private volatile boolean occupied;            //For Gauge
+
+
     private final boolean simulateNoise = true;
-    private final MeanRevertingInt synth = new MeanRevertingInt(
-            90,   // start
-            90.0, // mu:
-            0.08, // kappa:
-            5.0   // sigm
-    );
+    private final MeanRevertingInt synth = new MeanRevertingInt(90, 90.0, 0.08, 5.0);
+
     private RangeObserverActor (
             ActorContext<RangeObserverCommand> context,
             TimerScheduler<RangeObserverCommand> timers,
             RangeObserverConfig config,
-            Duration tickInterval, ActorRef<Metrics.Event> metrics, ActorRef<Metrics.Event> metricsRef) {
+            Duration tickInterval,
+            ActorRef<Metrics.Event> metrics,
+            ActorRef<Metrics.Event> metricsRef) {
         super(context);
         this.timers = timers;
         this.config = config;
         this.cmId = config.cmId;
         this.tickInterval=tickInterval !=null ? tickInterval : Duration.ofSeconds(5);
         this.metricsRef = metricsRef;
+
         getContext().getLog().info("metricsRef = {}", config.metricsRef);
+        this.occupied = Boolean.TRUE.equals(this.occupation);
+
+        final String actorLabel = "RangeObserverActor";
+
+        this.dmccLatency = DistributionSummary.builder("dmcc_latency_ms")
+                .baseUnit("ms")
+                .tag("actor", actorLabel)
+                .publishPercentileHistogram()
+                .register(reg);
+
+        this.occupationTrue = Counter.builder("occupation_change_total")
+                .tag("actor", actorLabel)
+                .tag("new_state", "true")
+                .register(reg);
+
+        this.occupationFalse = Counter.builder("occupation_change_total")
+                .tag("actor", actorLabel)
+                .tag("new_state", "false")
+                .register(reg);
+
+        Gauge.builder("occupation_state", () -> this.occupied ? 1 : 0)
+                .tag("actor", actorLabel)
+                .register(reg);
     }
 
-    public static Behavior<RangeObserverCommand> create(RangeObserverConfig config) {
+ /*   public static Behavior<RangeObserverCommand> create(RangeObserverConfig config) {
         return Behaviors.withTimers(timers->
                 Behaviors.setup(
                         ctx-> new RangeObserverActor(ctx, timers,config,Duration.ofSeconds(5), config.metricsRef,
                                 config.metricsRef  )));
+    }*/
+    public static Behavior<RangeObserverCommand> create(RangeObserverConfig config) {
+        Behavior<RangeObserverCommand> core =
+                Behaviors.withTimers(timers ->
+                        Behaviors.setup(ctx ->
+                                new RangeObserverActor(
+                                        ctx, timers, config, java.time.Duration.ofSeconds(5),
+                                        config.metricsRef, config.metricsRef
+                                )
+                        )
+                );
+
+        return ActorMetricsInterceptor.wrap("RangeObserverActor", RangeObserverCommand.class, core);
     }
+
+
 
     @Override
     public  Receive<RangeObserverCommand> createReceive() {

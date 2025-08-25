@@ -14,7 +14,7 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
 
     private final ActorRef<ScannerCommand> scanner;
     private final ActorRef<String> out;
-    private final Duration timeout = Duration.ofSeconds(2);
+    private final Duration timeout = Duration.ofSeconds(10);
 
     public static Behavior<String> create(ActorRef<ScannerCommand> scanner, ActorRef<String> out) {
         return Behaviors.setup(ctx -> new ConsoleAdapterActor(ctx, scanner, out));
@@ -43,21 +43,16 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
             case "mode auto" -> {
                 scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.AUTO));
                 out.tell("OK: mode=AUTO");
-
-
-
             }
             case "mode manual" -> {
                 scanner.tell(new ScannerCommand.SwitchMode(ScannerCommand.Mode.MANUAL));
                 out.tell("OK: mode=MANUAL");
             }
-
             case "mode?" -> {
                 ask(scanner, ScannerCommand.QueryMode::new, timeout, getContext().getSystem().scheduler())
                         .whenComplete((ms, ex) ->
                                 out.tell(ex == null ? ("mode=" + ms.mode()) : ("mode? failed: " + ex.getMessage())));
             }
-
             case "occ?" -> {
                 ask(scanner, ScannerCommand.QueryOccupation::new, timeout, getContext().getSystem().scheduler())
                         .whenComplete((os, ex) ->
@@ -95,7 +90,7 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
                         });
             }
 
-            case "setocc false" -> {
+          /*  case "setocc false" -> {
                 ask(scanner, ScannerCommand.QueryMode::new, timeout, getContext().getSystem().scheduler())
                         .whenComplete((ms, ex) -> {
                             if (ex != null) { out.tell("setocc failed: " + ex.getMessage()); return; }
@@ -106,7 +101,7 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
                                 out.tell("ignored: setocc is manual-only (mode=" + ms.mode() + ")");
                             }
                         });
-            }
+            }*/
            /* case "trigger" -> {
                 scanner.tell(new ScannerCommand.TriggerScan());
                 out.tell("trigger sent");
@@ -120,6 +115,14 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
                 scanner.tell(new ScannerCommand.SetOccupation(false));
                 out.tell("occupation := false");
             }*/
+            case "connect" -> {
+                scanner.tell(new ScannerCommand.OnConnect());
+                out.tell("connecting");
+            }
+            case "disconnect" -> {
+                scanner.tell(new ScannerCommand.Disconnect());
+                out.tell("disconnecting");
+            }
             case "start" -> {
                 scanner.tell(new ScannerCommand.Start());
                 out.tell("started");
@@ -144,6 +147,8 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
                 "  help",
                 "  start",
                 "  stop",
+                "  connect",
+                "  disconnect",
                 "  mode auto | mode manual | mode?",
                 "  trigger",
                 "  setocc true | setocc false",

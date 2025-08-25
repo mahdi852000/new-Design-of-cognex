@@ -23,6 +23,8 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.example.akka.metrics.ActorMetricsInterceptor;
+
 public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Behaviour<IResource>, TcpConnector{
 
     protected static final Logger logger = LoggerFactory.getLogger(ScannerActor.class);
@@ -75,10 +77,19 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
         this.cognexActor = cognexActor;
 
     }
-        public static Behavior<ScannerCommand> create(ScannerActorConfig config)   {
+     /*   public static Behavior<ScannerCommand> create(ScannerActorConfig config)   {
             return Behaviors.setup(ctx->
                     new ScannerActor(ctx,config, config.cognexActor,config.metricsRef));
-        }
+        }*/
+
+    public static Behavior<ScannerCommand> create(ScannerActorConfig config) {
+        Behavior<ScannerCommand> core =
+                Behaviors.setup(ctx ->
+                        new ScannerActor(ctx, config, config.cognexActor, config.metricsRef)
+                );
+        return ActorMetricsInterceptor.wrap("ScannerActor", ScannerCommand.class, core);
+    }
+
 
     private Behavior<ScannerCommand> onGetBehaviorDelegate(GetBehaviorDelegate msg) {
         Object delegate = ((Behaviour<IResource>) this).getBehaviourDelegate();
