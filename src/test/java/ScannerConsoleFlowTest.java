@@ -17,7 +17,7 @@ import org.example.akka.message.ScannerCommand;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 
 public class ScannerConsoleFlowTest {
     private static ActorTestKit testKit;
@@ -71,9 +71,6 @@ public class ScannerConsoleFlowTest {
             assertEquals("occupation=true", consoleOut.receiveMessage());
             return null;
         });
-       /* console.tell("occ?");
-        assertEquals("occupation=false", consoleOut.receiveMessage(Duration.ofSeconds(2)));*/
-
         // MANUAL: trigger
         console.tell("trigger");
         consoleOut.expectMessage("trigger sent");
@@ -89,24 +86,14 @@ public class ScannerConsoleFlowTest {
 
 
 
-        //observe
-       /* console.tell("start");
-        consoleOut.expectMessage("started");*/
+
+
 
         consoleOut.awaitAssert(Duration.ofSeconds(5), () -> {
             console.tell("occ?");
             assertEquals("occupation=true", consoleOut.receiveMessage());
             return null;
         });
-       /* console.tell("occ?");
-        String occAns = consoleOut.receiveMessage(Duration.ofSeconds(2));
-        if (!occAns.equals("occupation=true")) {
-            console.tell("occ?");
-            occAns = consoleOut.receiveMessage(Duration.ofSeconds(2));
-        }
-        assertEquals("occupation=true", occAns);
-        String autoCode = scanOut.receiveMessage(Duration.ofSeconds(3));
-        assertNotNull(autoCode);*/
 
         consoleOut.awaitAssert(Duration.ofSeconds(5), () -> {
             console.tell("occ?");

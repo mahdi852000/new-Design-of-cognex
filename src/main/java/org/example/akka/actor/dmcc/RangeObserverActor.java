@@ -85,12 +85,6 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                 .register(reg);
     }
 
- /*   public static Behavior<RangeObserverCommand> create(RangeObserverConfig config) {
-        return Behaviors.withTimers(timers->
-                Behaviors.setup(
-                        ctx-> new RangeObserverActor(ctx, timers,config,Duration.ofSeconds(5), config.metricsRef,
-                                config.metricsRef  )));
-    }*/
     public static Behavior<RangeObserverCommand> create(RangeObserverConfig config) {
         Behavior<RangeObserverCommand> core =
                 Behaviors.withTimers(timers ->
@@ -184,7 +178,6 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                 getContext().getLog().warn("Null result from DMCC");
                 return this;
             }
-           // long measurement = Long.parseLong(r.result());
 
             String s = r.result().trim();
             long measurement;
@@ -223,11 +216,10 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                 if (occupation == null || !occupation) {
                     occupation = true;
                     config.scannerActor.tell(new ScannerCommand.SetOccupation(true));
-                   // config.scanReceiver.tell(String.valueOf(measurement));
+
                     //For Debugging
                     getContext().getLog().info("Trigger condition met. Occupation ON (within range).");
-                   /* config.scannerActor.tell(new ScannerCommand.TriggerScan()); //This is my Question! is this what we want?
-                    getContext().getLog().info("Trigger condition met. Occupation ON (within range). TriggerScan sent.");*/
+
                     getContext().getLog().info("Occupation changed to ON");
                 }
             } else if (avg > config.rangeOff) {
@@ -271,12 +263,6 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
             return (rnd.nextDouble() < frac) ? (int) (lo + 1) : (int) lo;
         }
     }
-
-    /*  void publishAutoSample(double avg, long meas, boolean occupied) {
-        long ts = System.currentTimeMillis();
-        metricsRef.tell(new Metrics.Trigger(true, ts));
-        metricsRef.tell(new Metrics.Record(ts, avg, meas, occupied));
-    }*/
 
 }
 

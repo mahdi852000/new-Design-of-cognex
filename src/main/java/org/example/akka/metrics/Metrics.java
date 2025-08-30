@@ -27,6 +27,8 @@ public final class Metrics {
 
     private Metrics() {}
 
+
+
     // ===== Actor factory =====
     public static Behavior<Event> create(Path csv, Duration flushEvery) {
         return Behaviors.withTimers((TimerScheduler<Event> timers) ->
@@ -47,7 +49,7 @@ public final class Metrics {
                             ctx.getLog().warn("metrics init failed: {}", e.toString());
                         }
                         if (!headerWritten) {
-                          //  write(csv, "ts,avg,measurement,occupied,autoCnt,manualCnt,dmccLatencyMs\n");
+
                             write(csv, "ts,avg,measurement,occupied,autoCnt,manualCnt,dmccLatencyMs,autoCntAtRecord,manualCntAtRecord\n");
 
                             headerWritten = true;

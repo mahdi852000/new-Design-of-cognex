@@ -62,17 +62,14 @@ class RangeObserverActorTest {
                 ScannerCommand.SetOccupation.class);
         assertTrue(setOcc.occupied());
 
-       /* ScannerCommand triggerScan = scannerProbe.expectMessageClass(ScannerCommand.TriggerScan.class);
-        assertNotNull(triggerScan);*/
-
         scannerProbe.expectNoMessage(Duration.ofMillis(300));
 
-       //scannerProbe.expectMessageClass(ScannerCommand.TriggerScan.class);
+
         rangeObserverActor.tell(new RangeObserverCommand.StopObserving());
 
         scannerProbe.expectNoMessage(Duration.ofMillis(300));
 
-      //  rangeObserverActor.tell(new RangeObserverCommand.Tick());
+
 
         verify(dmccMock, atLeastOnce()).sendCommand(anyString(), anyInt(), anyBoolean());
     }
@@ -80,7 +77,6 @@ class RangeObserverActorTest {
 
     @Test
     void testRangeObserverReceivesScanCode() {
-       // TestKitJunitResource testKit = new TestKitJunitResource();
 
         // ScannerActor mock
         TestProbe<ScannerCommand> scannerProbe = testKit.createTestProbe();
@@ -98,7 +94,7 @@ class RangeObserverActorTest {
         ActorRef<RangeObserverCommand> observer = testKit.spawn(
                 RangeObserverActor.create(config)
         );
-       // observer.tell(new RangeObserverCommand.StartObserving());
+
 
         String scannedCode = "abc123";
         observer.tell(new RangeObserverCommand.ScanCode(scannedCode));

@@ -57,7 +57,7 @@ public class ScannerActorReliabilityTest {
         actor.tell(new RangeObserverCommand.StartObserving());
 
         scannerProbe.expectMessageClass(ScannerCommand.SetOccupation.class);
-      //  scannerProbe.expectMessageClass(ScannerCommand.TriggerScan.class);
+
 
         TestProbe<ScannerCommand> listenerProbe = testKit.createTestProbe();
         TestProbe<String> dummyReceiver = testKit.createTestProbe();

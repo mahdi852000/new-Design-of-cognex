@@ -90,31 +90,7 @@ public class ConsoleAdapterActor extends AbstractBehavior<String> {
                         });
             }
 
-          /*  case "setocc false" -> {
-                ask(scanner, ScannerCommand.QueryMode::new, timeout, getContext().getSystem().scheduler())
-                        .whenComplete((ms, ex) -> {
-                            if (ex != null) { out.tell("setocc failed: " + ex.getMessage()); return; }
-                            if (ms.mode() == ScannerCommand.Mode.MANUAL) {
-                                scanner.tell(new ScannerCommand.ManualSetOccupation(false));
-                                out.tell("occupation := false");
-                            } else {
-                                out.tell("ignored: setocc is manual-only (mode=" + ms.mode() + ")");
-                            }
-                        });
-            }*/
-           /* case "trigger" -> {
-                scanner.tell(new ScannerCommand.TriggerScan());
-                out.tell("trigger sent");
-            }
 
-            case "setocc true" -> {
-                scanner.tell(new ScannerCommand.SetOccupation(true));
-                out.tell("occupation := true");
-            }
-            case "setocc false" -> {
-                scanner.tell(new ScannerCommand.SetOccupation(false));
-                out.tell("occupation := false");
-            }*/
             case "connect" -> {
                 scanner.tell(new ScannerCommand.OnConnect());
                 out.tell("connecting");

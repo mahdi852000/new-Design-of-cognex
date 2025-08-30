@@ -6,6 +6,8 @@ import org.example.akka.metrics.MetricsServer;
 
 public final class BenchMetrics {
 
+
+
     public static final Counter COMPLETED = Counter.builder("bench_completed_total")
             .description("completed pings")
             .register(MetricsServer.registry());

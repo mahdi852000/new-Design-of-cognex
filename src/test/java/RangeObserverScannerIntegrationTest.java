@@ -61,12 +61,6 @@ public class RangeObserverScannerIntegrationTest {
             return null;
         });
 
-       /* ScannerCommand.TriggerScan trigger =
-                scannerProbe.expectMessageClass(ScannerCommand.TriggerScan.class, Duration.ofSeconds(2));
-        log.info("Received TriggerScan: {}", trigger);*/
-        /*scannerProbe.expectMessageClass(ScannerCommand.SetOccupation.class,Duration.ofSeconds(2));
-        TriggerScan msg = scannerProbe.expectMessageClass(TriggerScan.class,Duration.ofSeconds(2));
-        log.info("Received TriggerScan: {}", msg);*/
         observer.tell(new RangeObserverCommand.StopObserving());
         scannerProbe.expectNoMessage(Duration.ofMillis(3000));
     }

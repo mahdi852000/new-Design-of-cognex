@@ -4,14 +4,6 @@ import org.example.akka.event.SystemEvent;
 import org.example.akka.extra.IResource;
 
 public interface CognexCommand {
-    /*record Start() implements CognexCommand {}
-    record Stop() implements CognexCommand {}
-    record Disconnect() implements CognexCommand {}
-    record SetOccupation(boolean occupied) implements CognexCommand {}
-    record RegisterListener(ActorRef<SystemEvent.CognexEvent> listener) implements CognexCommand {}
-    record UnregisterListener(ActorRef<SystemEvent.CognexEvent> listener) implements CognexCommand {}
-    */
-
     record RegisterListener(ActorRef<SystemEvent.CognexEvent> listener) implements CognexCommand {}
     record UnregisterListener(ActorRef<SystemEvent.CognexEvent> listener) implements CognexCommand {}
     record ListenerDied(ActorRef<SystemEvent.CognexEvent> listener) implements CognexCommand {}

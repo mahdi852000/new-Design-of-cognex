@@ -65,45 +65,7 @@ public class Flooder extends AbstractBehavior<Flooder.Command> {
             getContext().getLog().info("Ramp finished.");
         }
     }
-        //For less than a Million
-    /*private void startRound(int qps, int durationSec, ActorRef<Ping> target) {
-        if (ticker != null && !ticker.isCancelled()) ticker.cancel();
 
-        final ActorRef<Command> self = getContext().getSelf(); //
-
-        long periodNanos = 1_000_000_000L / Math.max(1, qps);
-        ticker = scheduler.scheduleAtFixedRate(
-                Duration.ZERO, Duration.ofNanos(periodNanos),
-                () -> {
-                    long t0 = System.nanoTime();
-                    CompletionStage<Pong> fut = AskPattern.ask(
-                            target,
-                            (ActorRef<Pong> replyTo) -> new Ping(t0, replyTo),
-                            Duration.ofMillis(200),
-                            scheduler);
-                    fut.whenComplete((pong, ex) -> {
-                        if (ex != null) {
-                            BenchMetrics.TIMEOUTS.increment();
-                        } else {
-                            long rttMs = (System.nanoTime() - pong.sentAtNanos()) / 1_000_000;
-                            BenchMetrics.RTT.record(rttMs, TimeUnit.MILLISECONDS);
-                            BenchMetrics.COMPLETED.increment();
-                        }
-                    });
-                },
-                getContext().getSystem().executionContext()
-        );
-
-        scheduler.scheduleOnce(
-                Duration.ofSeconds(durationSec),
-                () -> {
-                    if (ticker != null) ticker.cancel();
-                    LOG.info("Round done at {} qps", qps);
-                    self.tell(NextStep.INSTANCE);
-                },
-                getContext().getSystem().executionContext()
-        );
-*/
         private void startRound(int qps, int durationSec, ActorRef<Ping> target) {
             if (ticker != null && !ticker.isCancelled()) ticker.cancel();
 

@@ -15,7 +15,7 @@ import org.example.akka.config.RangeObserverConfig;
 import org.example.akka.extra.FakeDataManSystem;
 import org.example.akka.message.RangeObserverCommand;
 import org.example.akka.message.ScannerCommand;
-import org.example.akka.metrics.MetricsServer;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -102,7 +102,7 @@ public class RangeObserverReliabilityTest {
         ActorRef<RangeObserverCommand> observer =
                 testKit.spawn(faultyBehavior, "reliableObserver");
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6000; i++) {
             observer.tell(new RangeObserverCommand.Tick());
             Thread.sleep(1000);
         }

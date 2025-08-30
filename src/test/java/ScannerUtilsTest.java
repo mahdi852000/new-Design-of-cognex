@@ -13,14 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-public class ScannerUtilsTest {
+class ScannerUtilsTest {
 
 
     private IResource mockResource;
     private IReference mockRef;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mockResource = mock(IResource.class);
         mockRef = mock(IReference.class);
     }

@@ -10,15 +10,9 @@ import org.example.akka.extra.FakeDataManSystem;
 import org.example.akka.message.RangeObserverCommand;
 import org.example.akka.message.ScannerCommand;
 
-import org.example.akka.metrics.MetricsServer;
-
 public class AppMain {
     public static void main(String[] args) {
-        // === Metrics server ===
-      //  int port = Integer.getInteger("METRICS_PORT", 9401);
-       // MetricsServer.start(port);
-       // MetricsServer.registry().counter("app_startup_total").increment();
-        //System.out.println(">>> metrics up at http://localhost:" + port + "/metrics");
+
 
         // === ActorSystem ===
         ActorSystem<Void> system = ActorSystem.create(Behaviors.setup(ctx -> {

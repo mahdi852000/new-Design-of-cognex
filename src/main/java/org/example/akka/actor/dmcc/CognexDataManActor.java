@@ -25,10 +25,6 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
         super(context);
     }
 
-  //  public static Behavior<CognexCommand> create() {
-   //     return Behaviors.setup(CognexDataManActor::new);
-    //}
-
     public static Behavior<CognexCommand> create() {
         Behavior<CognexCommand> core = Behaviors.setup(CognexDataManActor::new);
         return ActorMetricsInterceptor.wrap("CognexDataManActor", CognexCommand.class, core);
@@ -38,13 +34,6 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
     @Override
     public Receive<CognexCommand> createReceive() {
         return newReceiveBuilder()
-                /*.onMessage(Start.class,this::onStart)
-                .onMessage(Stop.class, this::onStop)
-                .onMessage(Connect.class, this::onConnect)
-                .onMessage(Disconnect.class, this::onDisconnect)
-                .onMessage(SetOccupation.class, this::onSetOccupation)
-                .onMessage(RegisterListener.class, this::onRegisterListener)
-                .onMessage(UnregisterListener.class, this::onUnregisterListener)*/
                 .onMessage(NotifyScannedCode.class, this::onNotifyScannedCode)
                 .onMessage(CognexCommand.RegisterListener.class, msg -> {
                     listeners.add(msg.listener());
@@ -71,41 +60,6 @@ public class CognexDataManActor extends AbstractBehavior<CognexCommand> {
 
                 .build();
     }
- /*   private Behavior<CognexCommand> onStart(Start msg) {
-        getContext().getLog().info("Received Start command");
-        return this;
-    }
-
-    private Behavior<CognexCommand> onStop(Stop msg) {
-        getContext().getLog().info("Received Stop command");
-        return this;
-    }
-
-    private Behavior<CognexCommand> onConnect(Connect msg) {
-        getContext().getLog().info("Received Connect command");
-        return this;
-    }
-
-    private Behavior<CognexCommand> onDisconnect(Disconnect msg) {
-        getContext().getLog().info("Received Disconnect command");
-        return this;
-    }
-
-    private Behavior<CognexCommand> onSetOccupation(SetOccupation msg) {
-        getContext().getLog().info("Received SetOccupation command with value: " + msg.occupied());
-        return this;
-    }
-
-    private Behavior<CognexCommand> onRegisterListener(CognexCommands.RegisterListener msg) {
-        listeners.add(msg.listener());
-        return this;
-    }
-
-    private Behavior<CognexCommand> onUnregisterListener(CognexCommands.UnregisterListener msg) {
-        listeners.remove(msg.listener());
-        return this;
-    }*/
-
     //This is the only Method which is used
     private Behavior<CognexCommand> onNotifyScannedCode(CognexCommand.NotifyScannedCode msg) {
         if (msg.code() == null || msg.code().isBlank()) {

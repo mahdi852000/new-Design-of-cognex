@@ -3,10 +3,7 @@ package org.example;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.javadsl.Behaviors;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import kamon.Kamon;
-import kamon.prometheus.PrometheusReporter;
+
 import org.example.akka.actor.dmcc.RangeObserverActor;
 import org.example.akka.actor.dmcc.ScannerActor;
 import org.example.akka.config.ScannerActorConfig;
@@ -16,37 +13,15 @@ import org.example.akka.extra.NoopResource;
 import org.example.akka.message.CognexCommand;
 import org.example.akka.message.RangeObserverCommand;
 import org.example.akka.message.ScannerCommand;
-import org.example.akka.metrics.MetricsServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class Main {
     public static void main(String[] args) {
-
-        /*Config forceProm = ConfigFactory.parseString(
-                "kamon.prometheus.embedded-server { hostname = \"0.0.0.0\", port = 9101 }"
-        );
-        Config config = forceProm.withFallback(ConfigFactory.load());
-
-        Kamon.init(config);
-        Kamon.registerModule("prometheus", new PrometheusReporter("kamon.prometheus", config));
-        System.out.println("Prometheus metrics at: http://localhost:9101/metrics");*/
-
-      //  MetricsServer.start(Integer.getInteger("METRICS_PORT", 9402));
-
-      /*  int port = Integer.getInteger("METRICS_PORT", 9401);
-        try {
-            org.example.akka.metrics.MetricsServer.start(port);
-            System.out.println("[metrics] listening on http://127.0.0.1:" + port + "/metrics");
-        } catch (Throwable t) {
-            System.err.println("[metrics] FAILED: " + t);
-            t.printStackTrace();
-        }*/
-       // MetricsServer.start(port);
-      //  MetricsServer.registry().counter("app_startup_total").increment();
-      //  System.out.println(">>> metrics up at http://localhost:" + port + "/metrics");
-
-
-        // === 2) ساخت ActorSystem ===
-        ActorSystem<Void> system = ActorSystem.create(Behaviors.setup(ctx -> {
+        final Logger logger = LoggerFactory.getLogger(Main.class);
+         /* ActorSystem<Void> system = */
+                  ActorSystem.create(Behaviors.setup(ctx -> {
             var metrics = ctx.spawn(
                     org.example.akka.metrics.Metrics.create(
                             java.nio.file.Paths.get("metrics.csv"),
@@ -57,7 +32,7 @@ public class Main {
 
             ActorRef<String> printer = ctx.spawn(
                     Behaviors.receiveMessage(msg -> {
-                        System.out.println(msg);
+                        logger.info("Received message: {}", msg);
                         return Behaviors.same();
                     }),
                     "printer"
@@ -97,7 +72,7 @@ public class Main {
 
             new Thread(() -> {
                 try (var br = new java.io.BufferedReader(new java.io.InputStreamReader(System.in))) {
-                    System.out.println("Type 'help' to see commands. Type 'exit' to quit.");
+                    logger.info("Type 'help' to see commands. Type 'exit' to quit.");
                     String line;
                     while ((line = br.readLine()) != null) {
                         if (line.equalsIgnoreCase("exit") || line.equalsIgnoreCase("quit")) break;
@@ -113,11 +88,8 @@ public class Main {
             return Behaviors.empty();
         }), "app");
 
-        // === 3) Shutdown Hook
-       /* Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try { Kamon.stop(); } catch (Exception ignored) {}
-            system.terminate();
-        }));*/
-        try { Thread.currentThread().join(); } catch (InterruptedException ignored) {}
+        try { Thread.currentThread().join(); } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

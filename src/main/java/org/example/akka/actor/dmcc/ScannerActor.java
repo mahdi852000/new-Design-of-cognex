@@ -77,10 +77,6 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
         this.cognexActor = cognexActor;
 
     }
-     /*   public static Behavior<ScannerCommand> create(ScannerActorConfig config)   {
-            return Behaviors.setup(ctx->
-                    new ScannerActor(ctx,config, config.cognexActor,config.metricsRef));
-        }*/
 
     public static Behavior<ScannerCommand> create(ScannerActorConfig config) {
         Behavior<ScannerCommand> core =
@@ -218,22 +214,7 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
         }
         return this;
     }
-   /* private Behavior<ScannerCommand> onSwitchMode(ScannerCommand.SwitchMode msg) {
-        if (msg.mode() == ScannerCommand.Mode.AUTO) {
-            if (mode != ScannerCommand.Mode.AUTO) {
-                mode = ScannerCommand.Mode.AUTO;
-                if (observerRef != null) observerRef.tell(new RangeObserverCommand.StartObserving());
-                getContext().getLog().info("Mode -> AUTO");
-            }
-        } else {
-            if (mode != ScannerCommand.Mode.MANUAL) {
-                mode = ScannerCommand.Mode.MANUAL;
-                if (observerRef != null) observerRef.tell(new RangeObserverCommand.StopObserving());
-                getContext().getLog().info("Mode -> MANUAL");
-            }
-        }
-        return this;
-    }*/
+
    private Behavior<ScannerCommand> onTriggerScan(ScannerCommand.TriggerScan msg) {
        logger.info("Scanner triggered to scan.");
 
@@ -310,32 +291,7 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
         getContext().getLog().info("DMCC disconnected; state -> DISCONNECTED");
         return this;
     }
-    /*   private Behavior<ScannerCommand> onDisconnect(ScannerCommand.Disconnect msg) {
 
-        if (rangeObserverActor != null && isRangeObserving) {
-            rangeObserverActor.tell(new RangeObserverCommand.StopObserving());
-            isRangeObserving = false;
-            getContext().getLog().info("RangeObserverActor stopped due to disconnect");
-        }
-        if (dmcc != null) {
-            try {
-                if (listener != null) dmcc.removeListener(listener);
-            } catch (Throwable t) {
-                getContext().getLog().warn("Failed to remove listener: {}", t.toString());
-            }
-            try {
-                if (dmcc.connected()) dmcc.disconnect();
-            } catch (Throwable t) {
-                getContext().getLog().warn("Failed to disconnect DMCC: {}", t.toString());
-            }
-        }
-        connected = false;
-        connectionState = ConnectionState.DISCONNECTED;
-        retryCount = 0;
-        cognexActor.tell(new CognexCommand.Disconnect());
-        getContext().getLog().info("DMCC disconnected; state -> DISCONNECTED");
-        return this;
-    }*/
     private Behavior <ScannerCommand> onGetOccupation (ScannerCommand.GetOccupation msg) {
         getContext().getLog().info("Check being Occupied");
         boolean isOccupied =  occupation !=null && occupation;
@@ -353,12 +309,7 @@ public class ScannerActor extends AbstractBehavior<ScannerCommand> implements Be
                 getContext().getSelf().tell(new ScannerCommand.TriggerScan());
                 triggeredWhileOccupied = true;
             }
-            //Can be removed
-           /*
-            if (occupied && connected && !triggeredWhileOccupied) {
-                getContext().getSelf().tell(new ScannerCommand.TriggerScan());
-                triggeredWhileOccupied = true;
-            }*/
+
             if (!occupied) {
                 triggeredWhileOccupied = false;
             }

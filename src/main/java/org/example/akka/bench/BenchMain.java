@@ -23,7 +23,7 @@ public class BenchMain {
 
         ActorRef<Flooder.Command> flooder = system.systemActorOf(Flooder.create(), "flood", Props.empty());
        // flooder.tell(new Flooder.Start(60_000, 30, router));
-       // flooder.tell(new Flooder.Ramp(1, 5, 50, 5, router));
+        flooder.tell(new Flooder.Ramp(1, 5, 5000, 5, router));
       //  flooder.tell(new Flooder.Ramp(1, 15, 500, 15, router));
       //  flooder.tell(new Flooder.Ramp(1, 50, 5000, 10, router));
        // flooder.tell(new Flooder.Ramp(100, 300, 600_000_0, 5, router));

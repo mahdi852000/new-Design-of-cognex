@@ -170,41 +170,8 @@ public class ScannerActorTest {
      */
     @Test
     public void testOnDisconnectShouldUpdateConnectionStatus() throws IOException {
-       /* DummyDMCC base = new DummyDMCC();
-        DataManSystem dmcc = org.mockito.Mockito.spy(base);
-        org.mockito.Mockito.doCallRealMethod()
-                .when(dmcc).sendCommand(org.mockito.ArgumentMatchers.anyString(),
-                        org.mockito.ArgumentMatchers.anyInt(),
-                        org.mockito.ArgumentMatchers.anyBoolean());
 
-        org.mockito.Mockito.when(dmcc.connected())
-                .thenReturn(false, true, false);
-        var cognexProbe = testKit.createTestProbe(org.example.akka.message.CognexCommand.class);
-        var sink = testKit.createTestProbe(String.class);
-        var cfg = new org.example.akka.config.ScannerActorConfig(
-                1, dmcc, new DummyListener(), new DummyResource(),
-                "localhost", 5000,
-                cognexProbe.getRef(),
-                true,
-                sink.getRef(),
-                false
-        );
-        ActorRef<ScannerCommand> scannerActor = testKit.spawn(ScannerActor.create(cfg));
-        TestProbe<ScannerCommand.ConnectedStatus> probe = testKit.createTestProbe();
-        scannerActor.tell(new ScannerCommand.OnConnect());
-        probe.awaitAssert(Duration.ofSeconds(2), () -> {
-            scannerActor.tell(new ScannerCommand.QueryIsConnected(probe.getRef()));
-            assertTrue(probe.receiveMessage().status());
-            return null;
-        });
-        scannerActor.tell(new ScannerCommand.OnDisconnect());
-        probe.awaitAssert(Duration.ofSeconds(2), () -> {
-            scannerActor.tell(new ScannerCommand.QueryIsConnected(probe.getRef()));
-            assertFalse(probe.receiveMessage().status());
-            return null;
-        });
-*/
-        scannerActor = spawnScannerActor(new DummyListener());
+    scannerActor = spawnScannerActor(new DummyListener());
         scannerActor.tell(new ScannerCommand.OnConnect());
 
         TestProbe<ScannerCommand.ConnectedStatus> probe = testKit.createTestProbe();
