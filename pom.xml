@@ -10,167 +10,154 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>Akka Java Project</name>
+
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>21</java.version>
-        <kamon.version>2.7.7</kamon.version>
-        <mockito.version>5.5.0</mockito.version>
+
+        <!-- نسخه‌های یک‌دست -->
         <akka.version>2.8.4</akka.version>
+        <kamon.version>2.7.7</kamon.version>
+        <micrometer.version>1.13.3</micrometer.version>
+        <mockito.version>5.19.0</mockito.version>
+
         <sonar.coverage.exclusions>**/Main.java</sonar.coverage.exclusions>
     </properties>
-        <dependencies>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>5.19.0</version>
-                <scope>test</scope>
-            </dependency>
 
-            <!-- Akka Typed -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-actor-typed_2.13</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
-            <!-- Akka Classic -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-actor_2.13</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
+    <dependencies>
+        <!-- Akka -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor-typed_2.13</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.13</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-slf4j_2.13</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
 
-            <!-- Akka SLF4J Logging -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-slf4j_2.13</artifactId>
-                <version>${akka.version}</version>
-            </dependency>
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.13</version>
+        </dependency>
 
-            <!-- SLF4J API -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>2.0.9</version>
-            </dependency>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
 
-            <!-- Logback -->
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>1.5.13</version>
-            </dependency>
+        <!-- Test -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor-testkit-typed_2.13</artifactId>
+            <version>${akka.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-testkit_2.13</artifactId>
+            <version>${akka.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-            <!-- Lombok -->
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.30</version>
-                <scope>provided</scope>
-            </dependency>
+        <!-- Enilink Komma -->
+        <dependency>
+            <groupId>net.enilink.komma</groupId>
+            <artifactId>net.enilink.komma.core</artifactId>
+            <version>1.7.4</version>
+        </dependency>
+        <dependency>
+            <groupId>net.enilink.komma</groupId>
+            <artifactId>net.enilink.composition</artifactId>
+            <version>1.7.0</version>
+        </dependency>
 
-            <!-- Akka Typed TestKit -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-actor-testkit-typed_2.13</artifactId>
-                <version>${akka.version}</version>
-                <scope>test</scope>
-            </dependency>
+        <!-- XChart -->
+        <dependency>
+            <groupId>org.knowm.xchart</groupId>
+            <artifactId>xchart</artifactId>
+            <version>3.8.6</version>
+        </dependency>
 
-            <!-- Akka Classic TestKit -->
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-testkit_2.13</artifactId>
-                <version>${akka.version}</version>
-                <scope>test</scope>
-            </dependency>
+        <!-- Kamon -->
+        <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kamon-instrumentation-common_3</artifactId>
+            <version>2.7.1</version>
+        </dependency>
 
-            <!-- JUnit Jupiter API -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>5.8.1</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.8.1</version>
-                <scope>test</scope>
-            </dependency>
+        <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kamon-akka_2.13</artifactId>
+            <version>${kamon.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kanela-agent</artifactId>
+            <version>1.0.18</version>
+        </dependency>
+        <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kamon-bundle_2.13</artifactId>
+            <version>2.7.7</version>
+        </dependency>
+        <!-- 🔴⚠️ حذف شده: kamon-akka_2.13 و kamon-prometheus_2.13
+             چون kamon-bundle همین‌ها رو شامل میشه و باعث duplicate میشه -->
+        <!-- Prometheus exporter (لازمه جدا اضافه بشه) -->
+        <dependency>
+            <groupId>io.kamon</groupId>
+            <artifactId>kamon-prometheus_2.13</artifactId>
+            <version>${kamon.version}</version>
+        </dependency>
 
-            <!-- Enilink Komma dependencies -->
-            <dependency>
-                <groupId>net.enilink.komma</groupId>
-                <artifactId>net.enilink.komma.core</artifactId>
-                <version>1.7.4</version>
-            </dependency>
-            <dependency>
-                <groupId>net.enilink.komma</groupId>
-                <artifactId>net.enilink.composition</artifactId>
-                <version>1.7.0</version>
-            </dependency>
-            <!--Metrics-->
-            <dependency>
-                <groupId>org.knowm.xchart</groupId>
-                <artifactId>xchart</artifactId>
-                <version>3.8.6</version>
-            </dependency>
-        <!--    <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>5.12.0</version>
-                <scope>test</scope>
-            </dependency>-->
-  <!--          <dependency>
-                <groupId>io.kamon</groupId>
-                <artifactId>kamon-core_2.13</artifactId> &lt;!&ndash; _2.13 = Scala version &ndash;&gt;
-                <version>2.7.2</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.kamon</groupId>
-                <artifactId>kamon-prometheus_2.13</artifactId>
-                <version>2.7.2</version>
-            </dependency>-->
-
-            <dependency>
-                <groupId>io.kamon</groupId>
-                <artifactId>kamon-core_2.13</artifactId>
-                <version>2.8.0-beta.1</version>
-            </dependency>
-            <dependency>
-                <groupId>io.prometheus</groupId>
-                <artifactId>prometheus-metrics-instrumentation-jvm</artifactId>
-                <version>1.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>io.kamon</groupId>
-                <artifactId>kamon-prometheus_3</artifactId>
-                <version>2.8.0-beta.1</version>
-            </dependency>
-            <dependency>
-                <groupId>io.kamon</groupId>
-                <artifactId>kamon-bundle_2.13</artifactId>
-                <version>2.7.7</version> <!-- یا 2.8.0-beta.1 اگر همخوان با بقیه گذاشتی -->
-            </dependency>
-            <dependency>
-                <groupId>io.kamon</groupId>
-                <artifactId>kanela-agent</artifactId>
-                <version>2.0.0-beta.3</version>
-            </dependency>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-core</artifactId>
-                <version>1.13.3</version>
-            </dependency>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>1.13.3</version>
-            </dependency>
-        </dependencies>
+        <!-- Micrometer -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>${micrometer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>${micrometer.version}</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
@@ -180,16 +167,12 @@
                 <version>0.8.11</version>
                 <executions>
                     <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
+                        <goals><goal>prepare-agent</goal></goals>
                     </execution>
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
+                        <goals><goal>report</goal></goals>
                     </execution>
                 </executions>
             </plugin>
@@ -207,6 +190,7 @@
                     <release>21</release>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -215,6 +199,7 @@
                     <mainClass>org.example.akka.bench.BenchMain</mainClass>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -227,6 +212,7 @@
                     </archive>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -238,21 +224,24 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                                <transformers>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>reference.conf</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                        <mainClass>org.example.akka.bench.BenchMain</mainClass>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                        <mainClass>org.example.akka.bench.BenchMain</mainClass>
-                                    </transformer>
-                                </transformers>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>shaded</shadedClassifierName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>reference.conf</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.example.akka.bench.BenchMain</mainClass>
+                                </transformer>
+                                <!-- ✅ فقط یک بار -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -260,14 +249,11 @@
             </plugin>
         </plugins>
     </build>
+
     <repositories>
         <repository>
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
-            <!--<repository>
-                <id>kamon-releases</id>
-                <url>https://repo.kamon.io/releases</url>
-            </repository>-->
-        </repositories>
+    </repositories>
 </project>

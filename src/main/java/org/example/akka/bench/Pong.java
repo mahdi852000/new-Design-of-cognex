@@ -1,4 +1,4 @@
 package org.example.akka.bench;
 
-public record Pong(long sentAtNanos) {
-}
+public record Pong(long id) {}
+

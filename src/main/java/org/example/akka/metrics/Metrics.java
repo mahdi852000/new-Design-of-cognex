@@ -23,6 +23,7 @@ public final class Metrics {
     public record Record(long ts, double avg, long measurement, boolean occupied) implements Event {}
     public record Trigger(boolean auto, long ts) implements Event {}
     public record DmccLatency(long ms, long ts) implements Event {}
+    public record Error(String type, long ts) implements Event {}
     private record Flush() implements Event {}
 
     private Metrics() {}
@@ -50,7 +51,9 @@ public final class Metrics {
                         }
                         if (!headerWritten) {
 
-                            write(csv, "ts,avg,measurement,occupied,autoCnt,manualCnt,dmccLatencyMs,autoCntAtRecord,manualCntAtRecord\n");
+
+                            write(csv, "ts,avg,measurement,occupied,autoCnt,manualCnt,dmccLatencyMs,autoCntAtRecord,manualCntAtRecord,error\n");
+
 
                             headerWritten = true;
                         }
@@ -96,6 +99,22 @@ public final class Metrics {
                                     // ... append row ...
                                     return this;
                                 })
+                                .onMessage(Error.class, e -> {
+                                    ctx.getLog().warn("METRICS/ERROR type={} ts={}", e.type(), e.ts());
+                                    buffer.add(String.join(",",
+                                            Long.toString(e.ts()),
+                                            "NaN",               // avg خالی
+                                            "-1",                // measurement خالی
+                                            "false",             // occupied پیش‌فرض
+                                            Long.toString(autoCnt),
+                                            Long.toString(manualCnt),
+                                            Long.toString(lastLatency),
+                                            "ERROR-" + e.type(), // برای اینکه توی CSV مشخص باشه
+                                            ""                   // extra
+                                    ));
+                                    return this;
+                                })
+
                                 .build();
                     }
                     void flush(Path csv) {

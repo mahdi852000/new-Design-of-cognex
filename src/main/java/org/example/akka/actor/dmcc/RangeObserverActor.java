@@ -22,7 +22,7 @@ import io.micrometer.core.instrument.*;
 
 import java.time.Duration;
 
-public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
+public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand>  {
 
     public final ActorRef<Metrics.Event> metricsRef;
     private final RangeObserverConfig config;
@@ -33,6 +33,7 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
     private Boolean occupation = Boolean.FALSE;
     private static final Object TICK_KEY = new Object();
     private final Duration tickInterval;
+    private boolean observing = false;
 
     // ===== Micrometer fields =====
     private final MeterRegistry reg = MetricsServer.registry();
@@ -112,6 +113,16 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                             timers.cancelAll();
                             getContext().getLog().info("Observer PostStop: all timers cancelled");
                             return Behaviors.same();})
+                .onMessage(RangeObserverCommand.StartObserving.class, m -> {
+                    onStartObserving();
+                    return this;
+                })
+                .onMessage(RangeObserverCommand.StartObservingBench.class, m -> {
+                    onStartObserving();
+
+                    m.replyTo.tell(true);
+                    return this;
+                })
                 .build();
     }
     // For Testing Purpose
@@ -155,6 +166,17 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
         return this;
     }
 
+    private Behavior<RangeObserverCommand> onStartObserving() {
+        if (!observing) {
+            observing = true;
+            timers.startTimerAtFixedRate(TICK_KEY, new RangeObserverCommand.Tick(), this.tickInterval);
+            //For test
+            getContext().getSelf().tell(new RangeObserverCommand.Tick());
+            getContext().getLog().info("onStartObserving: Range Observing Started");
+        }
+        return this;
+    }
+
     private Behavior<RangeObserverCommand> onStopObservingRange(RangeObserverCommand.StopObserving stopObserving) {
         timers.cancel(TICK_KEY);
         timers.cancelAll();
@@ -163,34 +185,68 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
     }
 
     private Behavior<RangeObserverCommand> onTick(RangeObserverCommand.Tick tick) {
+        long startNs = System.nanoTime();
+        long ts = System.currentTimeMillis();
+        long latencyMs = 0L;
+        Long measurement = null;
+        boolean occ = Boolean.TRUE.equals(occupation);
+
         try {
-            long startNs = System.nanoTime();
-            Response r = config.dmcc.sendCommand("GET HEIGHT-SENSOR.CURRENT-MEASUREMENT", cmId++,
-                    true);
+            Response r = config.dmcc.sendCommand("GET HEIGHT-SENSOR.CURRENT-MEASUREMENT", cmId++, true);
 
             long elapsedNs = System.nanoTime() - startNs;
-            long latencyMs = Math.max(1, elapsedNs / 1_000_000L);
+            latencyMs = Math.max(1, elapsedNs / 1_000_000L);
+
             if (r == null) {
                 getContext().getLog().warn("Received null Response from DMCC");
-                return this;
-            }
-           if (r.result() == null) {
-                getContext().getLog().warn("Null result from DMCC");
+                // متریک خطا
+                if (metricsRef != null) {
+                    metricsRef.tell(new Metrics.DmccLatency(latencyMs, ts));
+                    metricsRef.tell(new Metrics.Error("null-response", ts));
+                }
                 return this;
             }
 
+            if (r.result() == null) {
+                getContext().getLog().warn("Null result from DMCC");
+                if (metricsRef != null) {
+                    metricsRef.tell(new Metrics.DmccLatency(latencyMs, ts));
+                    metricsRef.tell(new Metrics.Error("null-result", ts));
+                }
+                return this;
+            }
+
+            // Parse result
             String s = r.result().trim();
-            long measurement;
             try {
                 measurement = Long.parseLong(s);
             } catch (NumberFormatException e) {
                 measurement = Math.round(Double.parseDouble(s));
             }
 
-
             if (simulateNoise) {
-                measurement = synth.next();
+                measurement = (long)synth.next();
             }
+
+        } catch (Throwable t) {
+            getContext().getLog().error("Error during range observation: {}", t.getMessage(), t);
+            if (metricsRef != null) {
+                metricsRef.tell(new Metrics.Error("exception", ts));
+            }
+            return this;
+        }
+
+        // حالا حتی اگر measurement null بود، می‌تونی -1 بفرستی
+        if (metricsRef != null) {
+            metricsRef.tell(new Metrics.DmccLatency(latencyMs, ts));
+            metricsRef.tell(new Metrics.Record(ts,
+                    measurement != null ? measurement.doubleValue() : -1.0,
+                    measurement != null ? measurement : -1,
+                    occ));
+        }
+
+        // ادامه‌ی occupation logic فقط وقتی measurement معتبره
+        if (measurement != null) {
             measurements[pos] = measurement;
             pos = (pos + 1) % measurements.length;
             double avg = java.util.Arrays.stream(measurements)
@@ -198,28 +254,10 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                     .average()
                     .orElse(0.0);
 
-            boolean occ = Boolean.TRUE.equals(occupation);
-            long ts = System.currentTimeMillis();
-
-            //For debug
-            getContext().getLog().debug("avg={}, rangeMin={}, rangeMax={}", avg, config.rangeMin, config.rangeMax);
-            getContext().getLog().debug("Avg(5)={}, measurement={}", avg, measurement);
-
-            getContext().getLog().info("METRICS record avg={} meas={} occ={}", avg, measurement, occ);
-
-            if (metricsRef != null) {
-                metricsRef.tell(new Metrics.DmccLatency(latencyMs, ts));
-                metricsRef.tell(new Metrics.Trigger(true, ts));
-                metricsRef.tell(new Metrics.Record(ts, avg, measurement, occ));
-            }
             if (config.rangeMin < avg && avg < config.rangeMax) {
                 if (occupation == null || !occupation) {
                     occupation = true;
                     config.scannerActor.tell(new ScannerCommand.SetOccupation(true));
-
-                    //For Debugging
-                    getContext().getLog().info("Trigger condition met. Occupation ON (within range).");
-
                     getContext().getLog().info("Occupation changed to ON");
                 }
             } else if (avg > config.rangeOff) {
@@ -229,19 +267,11 @@ public class RangeObserverActor extends AbstractBehavior<RangeObserverCommand> {
                     getContext().getLog().info("Occupation changed to OFF");
                 }
             }
-            else {
-                //For debugging purpose
-                getContext().getLog().info("Trigger condition NOT met. No scan triggered.");
-            }
-                //For debugging purpose
-            getContext().getLog().debug("Tick received");
+        }
 
-        } catch (Throwable t) {
-            getContext().getLog().error("Error during range observation: {}", t.getMessage(), t);
-            }
-        getContext().getLog().debug("Starting DMCC scanner at URI={} host={} port={}", config.uri, config.host,config.port);
         return this;
     }
+
 
     private static final class MeanRevertingInt {
         private double v; //Final Rounded Result

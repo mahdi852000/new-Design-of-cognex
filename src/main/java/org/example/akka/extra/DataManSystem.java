@@ -18,9 +18,11 @@ public class DataManSystem {
     
     public Response sendCommand(String command, Integer id, boolean useCheckSum) throws IOException {
     if(!this.connected()) {
-        return null;
+        System.out.println("sendCommand: not connected, returning NoResponse");
+        return new Response.NoResponse();
     }else {
         Response r = conn.send(new Request(command).id(id).useCheckSum(useCheckSum));
+        System.out.println("sendCommand: got from conn = " + r);
         return r != null ? r : new Response.NoResponse();
         }
     }

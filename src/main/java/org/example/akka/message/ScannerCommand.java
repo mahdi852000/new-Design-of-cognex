@@ -31,8 +31,10 @@ public interface ScannerCommand {
     }
     public record Disconnect() implements ScannerCommand{}
 
-    //TriggerScan for Test Purpose
+    //TriggerScan for Test and Bench Purpose
     public record TriggerScan() implements ScannerCommand {}
+    record TriggerScanBench(ActorRef<BenchAck> replyTo) implements ScannerCommand {}
+    record BenchAck(boolean ok) implements ScannerCommand {}
 
 
     public interface ScannerEventListener{

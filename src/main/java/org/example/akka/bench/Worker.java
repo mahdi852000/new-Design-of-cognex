@@ -26,7 +26,8 @@ public class Worker extends AbstractBehavior<Ping> {
 
     private Behavior<Ping> onPing(Ping msg) {
         ActorRef<Pong> replyTo = msg.replyTo();
-        replyTo.tell(new Pong(msg.sentAtNanos()));
+        System.out.println("Worker reply with sentAtNanos = " + msg.id());
+        replyTo.tell(new Pong(msg.id()));
         return this;
     }
 }
